@@ -6,12 +6,14 @@ const router = express.Router();
  * BASIC PHASE 1, Step A - Import model
  */
 // Your code here
+const { Tree } = require('../db/models')
 
 /**
  * INTERMEDIATE BONUS PHASE 1 (OPTIONAL), Step A:
  *   Import Op to perform comparison operations in WHERE clauses
  **/
 // Your code here
+const { Op } = require('sequelize')
 
 /**
  * BASIC PHASE 1, Step B - List of all trees in the database
@@ -25,8 +27,12 @@ const router = express.Router();
  */
 router.get('/', async (req, res, next) => {
     let trees = [];
-
     // Your code here
+    const allTrees = await Tree.findAll({
+        attributes: ['heightFt', 'tree', 'id'],
+        order: [['heightFt', 'DESC']]
+    })
+    trees.push(allTrees)
 
     res.json(trees);
 });
@@ -42,9 +48,17 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
     let tree;
+    const { id } = req.params
 
     try {
         // Your code here
+        tree = await Tree.findByPk(id) //req.params.id
+
+        // tree = await Tree.findOne({
+        //     where: {
+        //       id: id // <-- req.params.id
+        //     }
+        // })
 
         if (tree) {
             res.json(tree);
@@ -55,7 +69,7 @@ router.get('/:id', async (req, res, next) => {
                 details: 'Tree not found'
             });
         }
-    } catch(err) {
+    } catch (err) {
         next({
             status: "error",
             message: `Could not find tree ${req.params.id}`,
@@ -82,11 +96,29 @@ router.get('/:id', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
     try {
+        const { name, location, height, size } = req.body
+
+        const tree = await Tree.create({
+            tree: name,
+            location: location,
+            heightFt: height,
+            groundCircumferenceFt: size
+            // <tableName>: <req.body input name>
+        })
+
+        // prolly don't do that code v v v
+        // const { tree, location, height, size } = req.body
+
+        // const newTree = await Tree.create({
+        //     name, location, height, size
+        // })
+
         res.json({
             status: "success",
             message: "Successfully created new tree",
+            data: tree
         });
-    } catch(err) {
+    } catch (err) {
         next({
             status: "error",
             message: 'Could not create new tree',
@@ -121,7 +153,7 @@ router.delete('/:id', async (req, res, next) => {
             status: "success",
             message: `Successfully removed tree ${req.params.id}`,
         });
-    } catch(err) {
+    } catch (err) {
         next({
             status: "error",
             message: `Could not remove tree ${req.params.id}`,
@@ -167,7 +199,7 @@ router.delete('/:id', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
     try {
         // Your code here
-    } catch(err) {
+    } catch (err) {
         next({
             status: "error",
             message: 'Could not update new tree',
